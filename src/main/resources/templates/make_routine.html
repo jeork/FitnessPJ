@@ -17,9 +17,10 @@
 <!-- 메인 콘텐츠 -->
 <div class="container mt-5">
     <h1>새로운 루틴 만들기</h1>
-    <form id="routine-form" action="/workout/make_routine" method="post" th:action="@{/workout/make_routine}" th:object="${routineUpdateDto}">
+    <form id="routine-form" action="/workout/make_routine" method="post" th:action="@{/workout/make_routine}"
+          th:object="${routineUpdateDto}">
 
-    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
 
         <!--운동 컨테이너-->
         <div id="workout-container"></div>
@@ -160,68 +161,60 @@
 </div>
 
 
-    <!-- 스크립트 -->
-    <script>
-        let workoutCount = 0;
+<!-- 스크립트 -->
+<script>
+    let workoutCount = 0;
 
-        // 모달 생성
-        function showWorkoutModal() {
-            const workoutModal = new bootstrap.Modal(document.getElementById("workoutModal"));
-            workoutModal.show();
+    // 모달 생성
+    function showWorkoutModal() {
+        const workoutModal = new bootstrap.Modal(document.getElementById("workoutModal"));
+        workoutModal.show();
+    }
+
+    // 선택한 운동 추가
+    function confirmWorkout() {
+        // 현재 활성화된 탭 확인
+        const activeTab = document.querySelector('.nav-tabs .active');
+        const activeTabId = activeTab.getAttribute('data-bs-target').substring(1); // '#chest' -> 'chest'
+
+        // 활성화된 탭에 따른 select ID 설정
+        const selectedWorkout = document.getElementById(`${activeTabId}WorkoutSelect`).value;
+
+        workoutCount++;
+        const container = document.getElementById('workout-container');
+        const newGroup = createWorkoutGroup(workoutCount, selectedWorkout);
+        container.appendChild(newGroup);
+        addSet(workoutCount); // 초기 세트 추가
+        const workoutModal = bootstrap.Modal.getInstance(document.getElementById('workoutModal'));
+        workoutModal.hide();
+    }
+
+    // 루틴 이름 입력받기
+    function confirmRoutineName() {
+        const routineName = prompt("루틴의 이름을 입력하세요");
+        if (routineName) {
+            // 루틴 이름을 hidden input에 저장( 서버로 전송)
+            const routineNameInput = document.createElement('input');
+            routineNameInput.type = 'hidden';
+            routineNameInput.name = 'routine_name';
+            routineNameInput.value = routineName;
+            document.getElementById('routine-form').appendChild(routineNameInput);
+            return true; // 폼 제출
+        } else {
+            alert("루틴 이름을 입력해야 합니다.");
+            return false; // 폼 제출 방지
         }
-
-        // 선택한 운동 추가
-        function confirmWorkout() {
-            // 현재 활성화된 탭 확인
-            const activeTab = document.querySelector('.nav-tabs .active');
-            const activeTabId = activeTab.getAttribute('data-bs-target').substring(1); // '#chest' -> 'chest'
-
-            // 활성화된 탭에 따른 select ID 설정
-            const selectedWorkout = document.getElementById(`${activeTabId}WorkoutSelect`).value;
-
-            workoutCount++;
-            const container = document.getElementById('workout-container');
-            const newGroup = createWorkoutGroup(workoutCount, selectedWorkout);
-            container.appendChild(newGroup);
-            addSet(workoutCount); // 초기 세트 추가
-            const workoutModal = bootstrap.Modal.getInstance(document.getElementById('workoutModal'));
-            workoutModal.hide();
-        }
-
-        // 루틴 이름 입력받기
-        function confirmRoutineName(){
-            const routineName = prompt("루틴의 이름을 입력하세요");
-            if(routineName){
-                // 루틴 이름을 hidden input에 저장( 서버로 전송)
-                const routineNameInput = document.createElement('input');
-                routineNameInput.type = 'hidden';
-                routineNameInput.name = 'routine_name';
-                routineNameInput.value = routineName;
-                document.getElementById('routine-form').appendChild(routineNameInput);
-                return true; // 폼 제출
-            } else{
-                alert("루틴 이름을 입력해야 합니다.");
-                return false; // 폼 제출 방지
-            }
-        }
+    }
 
 
-        // 운동
-        function addWorkout() {
-            workoutCount++;
-            const container = document.getElementById('workout-container');
-            const newGroup = createWorkoutGroup(workoutCount, selectedWorkout);
-            container.appendChild(newGroup);
-            addSet(workoutCount); // 초기 세트 추가
-        }
-
-        // 운동 그룹 생성
-        function createWorkoutGroup(workoutId, workoutName) {
-            const newGroup = document.createElement('div');
-            newGroup.classList.add('workout-group');
-            newGroup.innerHTML = `
+    // 운동 그룹 생성
+    function createWorkoutGroup(workoutId, selectedWorkout) {
+        const newGroup = document.createElement('div');
+        newGroup.classList.add('workout-group');
+        newGroup.innerHTML = `
         <div class="workout-header" style="display: flex; align-items: center;">
-            <div class="workout-title" style="margin-right: auto;">${workoutName}</div>
+            <div class="workout-title" style="margin-right: auto;">${selectedWorkout}</div>
+            <input type="hidden" name="workouts[${workoutId - 1}].workout_name" value="${selectedWorkout}"/>
             <button type="button" class="btn btn-danger btn-remove" onclick="removeWorkout(this)">x</button>
         </div>
         <div class="set-header set-row">
@@ -233,55 +226,55 @@
         <div class="set-container"></div>
         <button type="button" class="btn btn-link btn-add" onclick="addSet(${workoutId})">세트 추가</button>
     `;
-            return newGroup;
-        }
+        return newGroup;
+    }
 
-        // 운동 제거
-        function removeWorkout(button) {
-            workoutCount--;
-            const workoutGroup = button.parentElement.parentElement; // 버튼의 부모 요소인 운동 그룹을 가져옴
-            workoutGroup.remove(); // 운동 그룹 제거
-        }
+    // 운동 제거
+    function removeWorkout(button) {
+        workoutCount--;
+        const workoutGroup = button.parentElement.parentElement; // 버튼의 부모 요소인 운동 그룹을 가져옴
+        workoutGroup.remove(); // 운동 그룹 제거
+    }
 
-        // 세트 추가
-        function addSet(workoutId) {
-            const setContainer = document.querySelector(`#workout-container .workout-group:nth-child(${workoutId}) .set-container`);
-            const setRow = createSetRow(setContainer.children.length + 1);
-            setContainer.appendChild(setRow);
-        }
+    // 세트 추가
+    function addSet(workoutId) {
+        const setContainer = document.querySelector(`#workout-container .workout-group:nth-child(${workoutId}) .set-container`);
+        const setRow = createSetRow(setContainer.children.length + 1);
+        setContainer.appendChild(setRow);
+    }
 
-        // 세트 행 생성
-        function createSetRow(setNumber) {
-            const setRow = document.createElement('div');
-            setRow.classList.add('set-row');
-            setRow.innerHTML = `
-            <div style="width: 100px;">${setNumber}</div>
-            <input type="text" class="form-control" name="workoutSet[${setNumber - 1}].weight" placeholder="kg" style="width: 100px; text-align: right;">
-            <input type="text" class="form-control" name="workoutSet[${setNumber - 1}].reps" placeholder="회" style="width: 100px; text-align: right;">
-            <button type="button" class="btn btn-danger btn-remove" onclick="removeSet(this)">세트 제거</button>
-        `;
-            return setRow;
-        }
+    // 세트 행 생성
+    function createSetRow(setNumber) {
+        const setRow = document.createElement('div');
+        setRow.classList.add('set-row');
+        setRow.innerHTML = `
+        <div style="width: 100px;">${setNumber}</div>
+        <input type="text" class="form-control" name="workouts[${workoutCount - 1}].workoutSet[${setNumber - 1}].weight" placeholder="kg" style="width: 100px; text-align: right;">
+        <input type="text" class="form-control" name="workouts[${workoutCount - 1}].workoutSet[${setNumber - 1}].reps" placeholder="회" style="width: 100px; text-align: right;">
+        <button type="button" class="btn btn-danger btn-remove" onclick="removeSet(this)">세트 제거</button>
+    `;
+        return setRow;
+    }
 
-        // 세트 삭제
-        function removeSet(button) {
-            const setRow = button.parentElement; // 버튼의 부모 요소인 세트 행을 가져옴
-            const setContainer = setRow.parentElement; // 세트 행의 부모 요소인 세트 컨테이너를 가져옴
-            setRow.remove(); // 세트 행 제거
-            updateSetNumbers(setContainer); // 남아 있는 세트의 번호 업데이트
-        }
+    // 세트 삭제
+    function removeSet(button) {
+        const setRow = button.parentElement; // 버튼의 부모 요소인 세트 행을 가져옴
+        const setContainer = setRow.parentElement; // 세트 행의 부모 요소인 세트 컨테이너를 가져옴
+        setRow.remove(); // 세트 행 제거
+        updateSetNumbers(setContainer); // 남아 있는 세트의 번호 업데이트
+    }
 
-        // 세트 번호 업데이트
-        function updateSetNumbers(setContainer) {
-            const setRows = setContainer.querySelectorAll('.set-row');
-            setRows.forEach((row, index) => {
-                row.querySelector('div').textContent = index + 1; // 세트 번호 업데이트
-            });
-        }
-    </script>
+    // 세트 번호 업데이트
+    function updateSetNumbers(setContainer) {
+        const setRows = setContainer.querySelectorAll('.set-row');
+        setRows.forEach((row, index) => {
+            row.querySelector('div').textContent = index + 1; // 세트 번호 업데이트
+        });
+    }
+</script>
 
-    <!-- Popper.js 및 Bootstrap JS 추가 -->
-    <script th:src="@{/popper.min.js}"></script>
-    <script th:src="@{/bootstrap.min.js}"></script>
+<!-- Popper.js 및 Bootstrap JS 추가 -->
+<script th:src="@{/popper.min.js}"></script>
+<script th:src="@{/bootstrap.min.js}"></script>
 </body>
 </html>

@@ -5,6 +5,7 @@ import com.mysite.sbb.workout_tab.workoutSet.WorkoutSet;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -24,13 +25,16 @@ public class Workout {
 
 
     @OneToMany(mappedBy = "workout", cascade = CascadeType.ALL, orphanRemoval = true) // workout_id로 WorkoutSet 참조
-    private List<WorkoutSet> workoutSets;
+    private List<WorkoutSet> workoutSet;
 
     public Workout() {
+        this.workoutSet = new ArrayList<>();
     }
 
     public Workout(Routine routine, String workout_name) {
+        this();
         this.routine = routine;
         this.workout_name = workout_name;
+
     }
 }
